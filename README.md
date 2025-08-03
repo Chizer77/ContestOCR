@@ -48,8 +48,6 @@ ContestOCR/
 pip install -r requirements.txt
 ```
 
----
-
 ## 使用方法
 1. **配置环境**：
    - 在项目根目录下创建 `.env` 文件，添加 OpenAI API Key：
