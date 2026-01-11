@@ -1,6 +1,6 @@
 # ContestOCR
 
-基于OCR的某知识竞赛自动化答题小脚本，通过图像识别和大模型API自动完成答题任务。项目使用 PaddleOCR 进行文字识别，并结合 OpenAI 的模型进行答案推理。
+基于OCR的某知识竞赛自动化答题小脚本，通过图像识别和大模型API自动完成答题任务。项目使用 PaddleOCR 进行文字识别，结合豆包大语言模型进行答案推理。
 
 
 ## 项目结构
@@ -47,8 +47,6 @@ ContestOCR/
 ```bash
 pip install -r requirements.txt
 ```
-
----
 
 ## 使用方法
 1. **配置环境**：
