@@ -5,7 +5,7 @@ class QuesResponse(BaseModel):
 
 def model_reply(client, question):
     completion = client.beta.chat.completions.parse(
-        model = "doubao-seed-1-6-flash-250615",
+        model = "doubao-seed-1.6-250615",
         messages = [
             {"role": "system", "content": "你精通科学百科知识,回答只包含答案A/B/C/D中的一个,不需要解释"},
             {"role": "user", "content": question},

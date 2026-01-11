@@ -3,7 +3,7 @@ import numpy as np
 import re
 import os
 import json
-import time
+import mss
 
 def is_option_start(text):
     return text.strip().startswith(('A.', 'B.', 'C.', 'D.'))
@@ -24,9 +24,18 @@ def extract_question_structure(ocr, config, isQuiz=False):
     x, y = config.loc
     width, height = config.size
 
-    region = (x, y, x + width, y + height)
-    img = ImageGrab.grab(bbox=region)
-    img.save("img/screenshot.png")
+    # region = (x, y, x + width, y + height)
+    # img = ImageGrab.grab(bbox=region)
+    # img.save("img/screenshot.png")
+    with mss.mss() as sct:
+        monitor = {
+            "left": x,
+            "top": y,
+            "width": width,
+            "height": height
+        }
+        img = sct.grab(monitor)
+    mss.tools.to_png(img.rgb, img.size, output="img/screenshot.png")
 
     current_dir = os.getcwd()
     img_path = os.path.join(current_dir, 'img/screenshot.png')

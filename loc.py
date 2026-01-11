@@ -6,6 +6,20 @@ from PIL import ImageGrab
 import random
 import time
 from utils import exist
+import mss
+import win32gui
+import win32con
+import win32api
+
+def send_click(hwnd, x, y):
+    # win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)  # 恢复窗口
+    # win32gui.SetForegroundWindow(hwnd) 
+    x, y = win32gui.ScreenToClient(hwnd, (x, y))
+    # print(f"发送点击到窗口：{hwnd}，位置：({x}, {y})")
+    lParam = win32api.MAKELONG(x, y)
+    win32gui.SendMessage(hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lParam)
+    win32gui.SendMessage(hwnd, win32con.WM_LBUTTONUP, None, lParam)
+
 
 def loc(template_path, screen_region=None):
     current_dir = os.getcwd()
@@ -14,12 +28,21 @@ def loc(template_path, screen_region=None):
     gray_template_orig = cv2.cvtColor(template_orig, cv2.COLOR_BGR2GRAY)
 
     # 缩放比例
-    scales = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    scales = [0.5, 0.7, 0.8, 0.9, 1.0]
 
-    if screen_region is None:
-        screenshot_pil = ImageGrab.grab()
-    else:
-        screenshot_pil = ImageGrab.grab(bbox=screen_region)
+    with mss.mss() as sct:
+        if screen_region is None:
+            monitor = sct.monitors[1] #副屏监控
+            # screenshot_pil = ImageGrab.grab()
+        else:
+            monitor = {
+                "left": screen_region[0],
+                "top": screen_region[1],
+                "width": screen_region[2] - screen_region[0],
+                "height": screen_region[3] - screen_region[1]
+            }
+            # screenshot_pil = ImageGrab.grab(bbox=screen_region)
+        screenshot_pil = sct.grab(monitor)
     screenshot_np = np.array(screenshot_pil)
     screenshot_bgr = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
     gray_screenshot = cv2.cvtColor(screenshot_bgr, cv2.COLOR_BGR2GRAY)
@@ -49,30 +72,35 @@ def loc(template_path, screen_region=None):
         return (None, None, None)
 
 
-def beginClick(config):
+def beginClick(hwnd, config):
     if not exist(config.loc) or not exist(config.size):
         return False
 
     x, y = config.loc
     w, h = config.size
 
-    center_x = x + w // 2 + random.uniform(-5, 5)
-    center_y = y + h // 4 * 3 + random.uniform(-5, 5)
+    center_x = x + (w // 2)
+    center_y = y + (h // 4 * 3)
 
-    pyautogui.click(center_x, center_y)
+    # center_x = x + (w // 2) * 0.8
+    # center_y = y + (h // 4 * 3) * 1.2 - 2
+
+    pyautogui.click(int(center_x), int(center_y))
+    # send_click(hwnd, int(center_x), int(center_y))
+    # send_click(hwnd, int(-266), int(747))
     print(f"开始答题：({center_x}, {center_y})")
     return True
 
 
-def clickAnswer(answer, config):
+def clickAnswer(hwnd, answer, config):
     if not exist(config.loc) or not exist(config.size):
         return False
     
     x, y = config.loc
     w, h = config.size
     
-    h_rand = random.uniform(-10, 20) * config.scale
-    w_rand = random.uniform(-20, 180) * config.scale
+    # h_rand = random.uniform(0, 20) * config.scale
+    # w_rand = random.uniform(-20, 180) * config.scale
 
     ans_path = os.path.join(os.getcwd(), "img", answer.upper() + '.png')
     region = (x, y, x + w, y + h)
@@ -81,13 +109,17 @@ def clickAnswer(answer, config):
     if not exist(loca):
         return False
 
-    abs_x = x + loca[0] + w_rand
-    abs_y = y + loca[1] + h_rand
+    abs_x = x + loca[0]
+    abs_y = y + loca[1]
+
+    # abs_x = x + (loca[0]) * 0.8
+    # abs_y = y + (loca[1]) * 1.3
     pyautogui.click(abs_x, abs_y)
+    # send_click(hwnd, int(abs_x), int(abs_y))
 
     return True
 
-def continueClick(config):
+def continueClick(hwnd, config):
     if not exist(config.loc) or not exist(config.size):
         return False
     
@@ -104,11 +136,23 @@ def continueClick(config):
     if not exist(cont_loc):
         return False
 
-    abs_x = x + cont_loc[0] + w_rand
-    abs_y = y + cont_loc[1] + h_rand
+
+    abs_x = x + cont_loc[0] + 10
+    abs_y = y + cont_loc[1] + 10
+
+    # abs_x = x + cont_loc[0]
+    # abs_y = y + cont_loc[1]
+
+    # abs_x = x + cont_loc[0] * 0.5
+    # abs_y = y + cont_loc[1] * 1.3
+    print(f"继续答题：({abs_x}, {abs_y})")
     pyautogui.click(abs_x, abs_y)
-    time.sleep(0.5 + random.uniform(0, 0.5))
+    # send_click(hwnd, int(abs_x), int(abs_y))
+    # send_click(hwnd, int(-395), int(792))
+    time.sleep(1 + random.uniform(0, 0.5))
     pyautogui.click(abs_x, abs_y)
+    # send_click(hwnd, int(abs_x), int(abs_y))
+    # send_click(hwnd, int(-395), int(792))
 
     return True
 
@@ -163,9 +207,17 @@ def get_color(config, position):
     abs_x = x + position[0]
     abs_y = y + position[1]
 
-    region = (abs_x, abs_y, abs_x + 2, abs_y + 2)
-
-    screenshot_pil = ImageGrab.grab(region)
+    # region = (abs_x, abs_y, abs_x + 2, abs_y + 2)
+    # screenshot_pil = ImageGrab.grab(region)
+    with mss.mss() as sct:
+        monitor = {
+            "left": abs_x,
+            "top": abs_y,
+            "width": 2,
+            "height": 2
+        }
+        screenshot_pil = sct.grab(monitor)
+       
     screenshot_np = np.array(screenshot_pil)
     screenshot_bgr = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
 
